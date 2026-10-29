@@ -1,0 +1,103 @@
+---
+title: "NY Times API: Approach"
+format: html
+editor: visual
+---
+
+## Introduction
+
+For this assignment, I will be using the New York Times Most Popular API to retrieve and analyze news articles. APIs are useful in data science because they allow us to collect information directly from a source without having to manually download or enter the data.
+
+I picked the New York Times Most Popular API because I wanted to find out what types of news stories get more views from the readership. The New York Times publishes stories in different categories such as Politics, Business, Technology, Health, and World. I thought it would be quite compelling to see which of the categories are the most common in the article views list of articles.
+
+This assignment will also give me the opportunity to practice working with API requests, JSON data, and data cleaning techniques in R.
+
+## Research Question
+
+Which New York Times news sections appear most frequently among the most-viewed articles over a 30-day period?
+
+The goal of this analysis is to identify which news sections are most represented among the popular articles returned by the API and compare the number of articles across different categories.
+
+## Data Source
+
+I will use the New York Times Most Popular API, specifically the Most Viewed endpoint. This API provides information about articles that have received the most views over a selected period.
+
+I selected the 30-day period because it provides a broader view of popular articles compared to looking at only one day or one week.
+
+The data includes several attributes, such as:
+
+Article title
+
+News section
+
+Publication date
+
+Article URL
+
+Article abstract
+
+These attributes will help me organize the dataset and identify patterns across different news sections.
+
+API Documentation: <https://developer.nytimes.com/docs/most-popular-product/1/overview>
+
+## Methodology
+
+**Step 1: Connect to the API**
+
+I will begin by registering for a New York Times Developer account and obtaining an API key. Using RStudio, I will use the httr package to send an HTTP GET request to the Most Popular API.
+
+The request will retrieve the most-viewed articles for the past 30 days. I will also check the API response to confirm that the request was successful before continuing with the analysis.
+
+**Step 2: Retrieve and Import the Data**
+
+As soon as the API request is done successfully, the data will be given in JSON format.
+
+The jsonlite package will help convert that JSON response into a structured R data frame. Using this, I will be able to work with the information in the form of a table instead of keeping it in the nested JSON format.
+
+**Step 3: Clean and Organize the Data**
+
+Once the data is imported in my system, I will analyze the dataset to understand the columns available and find out the missing or unrequired information.
+
+I will be dealing with article titles, sections of news, publication dates, and URLs.
+
+Apart from this, I will search for duplicate articles, the absence of values, and data inconsistency in the data. Using the dplyr package, I will be able to work on the filtering, selection, and arrangement of data before proceeding to the analysis stage.
+
+**Step 4: Analyze the Data**
+
+Once the dataset is cleaned, I will group the articles by their news sections and count how many articles belong to each category.
+
+This will help me determine which sections appear most frequently among the most-viewed articles.
+
+I will also calculate the percentage of articles represented by each section to make comparisons easier.
+
+The analysis will focus on the number of articles within each category rather than the total number of views, since the API does not provide individual article view counts.
+
+**Step 5: Visualize the Results**
+
+To present the findings, I will use ggplot2 to create a bar chart showing the number of most-viewed articles in each news section.
+
+I plan to organize the chart from the section with the highest number of articles to the section with the lowest number. This will make it easier to identify which categories are most represented.
+
+I will include a clear title, axis labels, and colors that make the visualization easy to understand.
+
+## Expected Results
+
+I assume that some news topics will appear more frequently than others among the articles with the highest readership. One would think that topics such as Politics, World News, Business or Technology are likely to be most popular depending on the events and the interests of readers during the period under consideration.
+
+Nonetheless, without looking at the data, I won’t know which topics were the most in vogue.
+
+Additionally, I should mention that my findings will be limited to articles provided by the service over the chosen 30-day period, and that they will not represent the readership statistics of all publications of The New York Times.
+
+## Conclusion
+
+In this project, I aim to learn more about APIs and how they work with real-life data.
+
+Through the New York Times Most Popular API, I will gain experience with API requests, handling JSON responses, cleaning data sets, and making visualizations in R.
+
+Also, this project will allow me to expand my knowledge in data science that I have obtained during DATA 607 and to answer the research question through public news data.
+
+## References
+
+The New York Times. (n.d.). *Most Popular API*. The New York Times Developer Network. <https://developer.nytimes.com/docs/most-popular-product/1/overview>
+
+Wickham, H. (n.d.). *httr quickstart vignette*. CRAN. <https://cran.r-project.org/web/packages/httr/vignettes/quickstart.html>
