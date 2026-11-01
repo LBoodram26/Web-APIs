@@ -1,0 +1,234 @@
+---
+title: "NY Times API: Code Base"
+author: "Lakeranie Boodram"
+format: html
+editor: visual
+execute:
+  warning: false
+  message: false
+---
+
+## Introduction
+
+## Step 1: Load Required R Packages
+
+For this project, I will make use of the New York Times Most Popular API in order to get data on the most popular news articles during the last 30 days. I expect to identify the most frequently appearing news subsections as per the retrieved articles.
+
+I will work on R to connect to the API and collect the JSON data in addition to cleaning and structuring the data before coming up with visualizations that will help to analyze the news categories.
+
+**Research Question:** Which New York Times news sections appear most frequently among the most-viewed articles over a 30-day period?
+
+```{r}
+# Install packages if they are not already installed
+packages <- c("httr", "jsonlite", "dplyr", "ggplot2")
+
+new_packages <- packages[
+  !packages %in% installed.packages()[, "Package"]
+]
+
+if (length(new_packages) > 0) {
+  install.packages(new_packages)
+}
+
+# Load packages
+library(httr)
+library(jsonlite)
+library(dplyr)
+library(ggplot2)
+```
+
+## Step 2: Connect to the New York Times API
+
+I will use the New York Times Most Popular API to retrieve the most-viewed articles over a 30-day period. My API key is securely stored in an environment variable so that it does not appear in the published document.
+
+```{r}
+# Retrieve API key from environment
+api_key <- Sys.getenv("NYT_API_KEY")
+
+# Confirm the API key exists without displaying it
+if (!nzchar(api_key)) {
+  stop("NYT_API_KEY is missing.")
+}
+
+# Define the Most Popular API endpoint
+api_url <- "https://api.nytimes.com/svc/mostpopular/v2/viewed/30.json"
+```
+
+## Step 3: Verify the API Connection
+
+After setting up the API endpoint, I will send an HTTP GET request to the New York Times API. I will check the response status code to confirm that the request was successful before retrieving and analyzing the data.
+
+```{r}
+# Send request to the New York Times API
+response <- GET(
+  url = api_url,
+  query = list("api-key" = api_key)
+)
+
+# Check response status
+status_code(response)
+
+# Stop execution if the request fails
+stop_for_status(response)
+
+```
+
+## Step 4: Retrieve and Import the Data
+
+After successfully connecting to the New York Times API, I will retrieve the JSON response and convert it into a data frame using the `jsonlite` package. This will make it easier to examine the articles and prepare the data for analysis.
+
+```{r}
+
+# Confirm that the API request was successful
+stop_for_status(response)
+
+# Convert JSON response into an R object
+nyt_data <- jsonlite::fromJSON(
+  httr::content(response, as = "text", encoding = "UTF-8"),
+  flatten = TRUE
+)
+
+# Extract articles from the API results
+articles <- as.data.frame(nyt_data$results)
+
+# Display the total number of articles
+nrow(articles)
+
+# Display the first six articles
+
+head(
+  articles[, c("title", "section", "published_date")],
+  6
+)
+
+```
+
+## Step 5: Clean and Organize the Data
+
+Now that the data has been imported, I will select the columns that are most relevant to my research question. I will focus on the article titles, news sections, publication dates, URLs, and abstracts.
+
+I will also check for missing values and duplicate articles to make sure the dataset is organized before moving on to the analysis.
+
+```{r}
+# Select relevant columns
+articles_clean <- articles %>%
+  select(
+    title,
+    section,
+    published_date,
+    url,
+    abstract
+  ) %>%
+  distinct(url, .keep_all = TRUE) %>%
+  filter(
+    !is.na(section),
+    trimws(section) != ""
+  ) %>%
+  mutate(
+    published_date = as.Date(published_date),
+    section = trimws(section)
+  )
+
+# Display first six rows
+head(articles_clean)
+
+# Check for missing values
+colSums(is.na(articles_clean))
+
+# Display number of cleaned articles
+nrow(articles_clean)
+```
+
+## Step 6: Analyze the Most-Viewed News Sections
+
+After cleaning the dataset, I will group the articles by their news sections to determine which categories appear most frequently. I will calculate the number of articles in each section and the percentage they represent in the dataset.
+
+This will help me compare different news categories and identify which sections have the highest representation among the most-viewed articles.
+
+```{r}
+# Count articles by news section
+section_counts <- articles_clean %>%
+  count(section, name = "article_count", sort = TRUE) %>%
+  mutate(
+    percentage = round(
+      article_count / sum(article_count) * 100, 2
+    )
+  )
+
+# Display the results
+print(section_counts)
+```
+
+## Step 7: Visualize the Results
+
+### Initial Findings
+
+Based on the data retrieved from the New York Times Most Popular API, the U.S. section had the highest number of articles, with 11 out of 20 articles representing 55% of the dataset.
+
+The Opinion section followed with 3 articles, accounting for 15%. The remaining sections, including Arts, Movies, New York, Polls, Technology, and Well, each contained one article, representing 5% individually.
+
+These results suggest that U.S. news was the most represented category among the most-viewed articles returned by the API during the selected 30-day period. However, this does not necessarily mean the U.S. section received 55% of all article views.
+
+```{r}
+# Create a horizontal bar chart
+ggplot(
+  section_counts,
+  aes(
+    x = reorder(section, article_count),
+    y = article_count,
+    fill = section == "U.S."
+  )
+) +
+  geom_col() +
+  geom_text(
+    aes(label = article_count),
+    hjust = -0.2,
+    size = 4
+  ) +
+  coord_flip() +
+  scale_fill_manual(
+    values = c("FALSE" = "steelblue",
+               "TRUE" = "darkorange"),
+    guide = "none"
+  ) +
+  scale_y_continuous(
+    limits = c(0, max(section_counts$article_count) + 2)
+  ) +
+  labs(
+    title = "Most-Viewed NY Times Articles by News Section",
+    subtitle = "30-Day Period",
+    x = "News Section",
+    y = "Number of Articles"
+  ) +
+  theme_minimal()
+```
+
+## Step 8: Results and Findings
+
+After analyzing the data from the New York Times Most Popular API, I found that the U.S. section had the highest representation among the most-viewed articles during the selected 30-day period.
+
+Out of the 20 articles returned by the API, 11 belonged to the U.S. section, representing 55% of the dataset. Opinion was the second most represented section, with 3 articles accounting for 15%.
+
+The remaining categories, including Arts, Movies, New York, Polls, Technology, and Well, each had one article, representing 5% individually.
+
+The bar chart makes it easier to see the difference between the news categories. The U.S. section had significantly more articles than any other category in the dataset.
+
+These findings answer my research question by showing that U.S. news appeared most frequently among the articles returned by the Most Popular API. However, because the dataset contains only 20 articles and does not provide actual view counts, I cannot conclude that U.S. news received the majority of all reader views
+
+## Step 9: Conclusion
+
+The purpose of this project was to utilize the New York Times Most Popular API for accessing and understanding the world of news through real-world news data.
+
+I implemented R in order to connect to the API, read the JSON response, clean and arrange the dataset, so that articles were classified by their news sections. I also prepared a bar chart to represent my findings visually.
+
+The results indicated that the U.S. has become the most common section by counting for 55% of the articles, with opinion coming second at 15%.
+
+The limitation of the analysis is that the API only provides a limited selection of articles, rather than providing their actual readership statistics. Thus, the results only reflect the distribution of news sections across the collected articles.
+
+In conclusion, this project helped to learn how to apply APIs in data science for data collection, processing, extraction and visualization.
+
+## References
+
+The New York Times. (n.d.). *Most Popular API*. The New York Times Developer Network. <https://developer.nytimes.com/docs/most-popular-product/1/overview>
+
+Wickham, H. (n.d.). *httr quickstart vignette*. CRAN. <https://cran.r-project.org/web/packages/httr/vignettes/quickstart.html>
